@@ -10,7 +10,9 @@ import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.task.Task;
 import org.junit.Test;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by shengxingyue on 2017/7/21.
@@ -114,5 +116,36 @@ public class ProcessTest {
                 .createHistoricProcessInstanceQuery()
                 .processInstanceId(processId).singleResult();
         System.out.println("\n流程结束时间："+historicProcessInstance.getEndTime());
+    }
+
+    @Test
+    public void testActiviti() {
+        ProcessEngine processEngine = ProcessEngineConfiguration.createProcessEngineConfigurationFromResource("activiti.cfg.xml").buildProcessEngine();
+        RepositoryService repositoryService = processEngine.getRepositoryService();
+        RuntimeService runtimeService = processEngine.getRuntimeService();
+        repositoryService.createDeployment().addClasspathResource("ActivitiTest.bpmn").deploy();
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("check", "123");
+        // 启动一个新流程
+        String processId = runtimeService.startProcessInstanceByKey("ActivitiTest", "ActivitiTest", map).getId();
+
+        TaskService taskService = processEngine.getTaskService();
+        // 1
+        Task task = taskService.createTaskQuery().processInstanceId(processId).singleResult();
+        System.out.println(task.getName());
+        taskService.complete(task.getId());
+
+        // 2
+        task = taskService.createTaskQuery().processInstanceId(processId).singleResult();
+        System.out.println(task.getName());
+        taskService.complete(task.getId());
+
+        // 3
+        task = taskService.createTaskQuery().processInstanceId(processId).singleResult();
+        System.out.println(task.getName());
+        taskService.complete(task.getId());
+
+        System.out.println("结束了");
+
     }
 }
